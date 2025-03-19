@@ -27,8 +27,16 @@ This will generate an executable file named `go-jwt`.
 
 Once built, you can use the tool to parse a JWT token by running:
 
+### As an argument
+
 ```bash
 ./go-jwt [JWT_TOKEN]
+```
+
+### As an stdin
+
+```bash
+echo '[JWT_TOKEN]' | ./go-jwt
 ```
 
 Replace `[JWT_TOKEN]` with the actual JWT string you want to parse.

@@ -4,11 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 )
 
+// Function to decode the JWT
 func decodeJWT(tokenString string) (map[string]interface{}, error) {
 	// Split the token into 3 parts: Header, Payload, and Signature
 	parts := strings.Split(tokenString, ".")
@@ -32,14 +34,14 @@ func decodeJWT(tokenString string) (map[string]interface{}, error) {
 	return jsonPayload, nil
 }
 
-// Function to decode Base64URL into bytes
+// Function to decode Base64URL to bytes
 func decodeBase64URL(base64URL string) ([]byte, error) {
 	// Convert Base64URL to standard Base64
 	base64String := base64URL
 	base64String = strings.ReplaceAll(base64String, "-", "+")
 	base64String = strings.ReplaceAll(base64String, "_", "/")
 
-	// Ensure the Base64 string length is a multiple of 4
+	// Ensure the Base64 string is a multiple of 4 in length
 	padding := len(base64String) % 4
 	if padding > 0 {
 		base64String += strings.Repeat("=", 4-padding)
@@ -50,13 +52,21 @@ func decodeBase64URL(base64URL string) ([]byte, error) {
 }
 
 func main() {
-	// Check if the JWT token is provided via command-line arguments
-	if len(os.Args) < 2 {
-		log.Fatal("JWT token must be provided as an argument.")
-	}
+	var tokenString string
 
-	// Retrieve the JWT token from the command-line arguments
-	tokenString := os.Args[1]
+	// Check if JWT token is passed as a command-line argument
+	if len(os.Args) > 1 {
+		// Use the token from the command-line arguments
+		tokenString = os.Args[1]
+	} else {
+		// If no argument, read from stdin (pipe input)
+		input, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			log.Fatalf("Error reading from stdin: %v", err)
+		}
+		// Remove any newlines or unnecessary spaces from the input
+		tokenString = strings.TrimSpace(string(input))
+	}
 
 	// Decode the token
 	payload, err := decodeJWT(tokenString)
@@ -64,12 +74,12 @@ func main() {
 		log.Fatalf("Error decoding JWT: %v", err)
 	}
 
-	// Output the decoding result in JSON format
+	// Output the decoded result in a pretty JSON format
 	output, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
 		log.Fatalf("Error marshaling payload to JSON: %v", err)
 	}
 
-	// Display the result in JSON format
+	// Print the result in JSON format
 	fmt.Println(string(output))
 }
